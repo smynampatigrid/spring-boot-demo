@@ -32,4 +32,4 @@ This project is built using Spring Boot and demonstrates the basic concepts of b
 4. Open browser at `http://localhost:8080`
 
 ## ✅ Status
-All required assignments completed successfully.
+All required assignments completed successfully!.
