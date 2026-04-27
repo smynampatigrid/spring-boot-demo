@@ -1,35 +1,67 @@
-# Spring Boot Demo Project
+# Inversion of Control (IoC) and Dependency Injection (DI)
 
-## 📌 Overview
-This project is built using Spring Boot and demonstrates the basic concepts of building a web application using Java.
+## Theory
 
-## 🚀 Features Implemented
-- Spring Boot project setup using Spring Initializr
-- REST Controller with endpoint (/)
-- Layered architecture (Controller → Service)
-- JPA Entity (Publisher, Author)
-- Spring Data JPA Repository
-- H2 in-memory database
-- Bootstrap class to load initial data
-- Thymeleaf integration for UI
-- MVC Controller to display authors list
+### What is ApplicationContext?
+ApplicationContext is the core container in Spring that manages beans and their lifecycle. It is responsible for creating, configuring, and injecting dependencies.
 
-## 🌐 Endpoints
-- http://localhost:8080/ → Hello endpoint
-- http://localhost:8080/authors → Displays list of authors
+---
 
-## 🛠️ Tech Stack
-- Java 17
-- Spring Boot
-- Spring Data JPA
-- H2 Database
-- Thymeleaf
+### Tradeoffs of Dependency Injection
 
-## ▶️ How to Run
-1. Clone the repository
-2. Open in IntelliJ / VS Code
-3. Run `DemoApplication.java`
-4. Open browser at `http://localhost:8080`
+- Constructor Injection:
+    - Recommended approach
+    - Ensures immutability
+    - Easier testing
 
-## ✅ Status
-All required assignments completed successfully!.
+- Setter Injection:
+    - Useful for optional dependencies
+    - Allows flexibility
+
+- Field Injection:
+    - Not recommended
+    - Hard to test
+    - Breaks immutability
+
+---
+
+### Why use @Qualifier?
+
+When multiple beans of the same type exist, Spring cannot decide which one to inject. @Qualifier helps specify the exact bean.
+
+---
+
+### How to avoid loading heavy beans?
+
+- Use @Lazy annotation
+- Use profiles (@Profile)
+- Conditional bean loading
+
+---
+
+### Spring Lifecycle Stages
+
+1. Bean Instantiation
+2. Dependency Injection
+3. Initialization (@PostConstruct)
+4. Usage
+5. Destruction (@PreDestroy)
+
+---
+
+## Practical Observations
+
+### Multiple Beans Issue
+
+When multiple beans of the same type are present, Spring throws:
+
+NoUniqueBeanDefinitionException
+
+---
+
+### Fix using @Qualifier
+
+We resolved ambiguity by specifying the bean:
+
+```java
+public Bar(@Qualifier("fooImpl") Foo foo)
