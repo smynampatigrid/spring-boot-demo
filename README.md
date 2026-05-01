@@ -63,5 +63,52 @@ NoUniqueBeanDefinitionException
 
 We resolved ambiguity by specifying the bean:
 
-```java
-public Bar(@Qualifier("fooImpl") Foo foo)
+## 5.3.1 Application Context Configuration
+
+### Difference between @Configuration, @Component, @Service
+
+@Configuration:
+Used to define configuration classes that declare one or more @Bean methods. These classes are used by Spring to generate and manage beans.
+
+@Component:
+Generic stereotype annotation used to mark a class as a Spring-managed bean.
+
+@Service:
+Specialized version of @Component used to indicate service layer classes. It improves readability and semantic meaning.
+
+---
+
+### How can we customize component scanning?
+
+We can customize component scanning using:
+- @ComponentScan(basePackages = "com.example.demo")
+- Include and exclude filters
+- Specifying packages explicitly
+
+---
+
+### What value will a property have if it is defined in two different profiles both active?
+
+The property from the last loaded profile takes precedence and overrides the previous one.
+
+---
+
+### Why use Factory Beans instead of regular beans?
+
+Factory beans are used when bean creation logic is complex. They provide more control over instantiation and configuration of objects.
+
+---
+
+### How to override properties defined in .properties file?
+
+Properties can be overridden using:
+- Command line arguments
+- Environment variables
+- Different profile-specific property files
+- @TestPropertySource in tests
+
+---
+
+### Does @PreDestroy get called for prototype beans?
+
+No, @PreDestroy is not called for prototype scoped beans because Spring does not manage their full lifecycle.
