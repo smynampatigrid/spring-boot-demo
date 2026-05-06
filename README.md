@@ -1,114 +1,165 @@
-# Inversion of Control (IoC) and Dependency Injection (DI)
+# Spring Boot - Configuration & Autoconfiguration Assignment
 
-## Theory
-
-### What is ApplicationContext?
-ApplicationContext is the core container in Spring that manages beans and their lifecycle. It is responsible for creating, configuring, and injecting dependencies.
-
----
-
-### Tradeoffs of Dependency Injection
-
-- Constructor Injection:
-    - Recommended approach
-    - Ensures immutability
-    - Easier testing
-
-- Setter Injection:
-    - Useful for optional dependencies
-    - Allows flexibility
-
-- Field Injection:
-    - Not recommended
-    - Hard to test
-    - Breaks immutability
+## 📌 Overview
+This project demonstrates core Spring Boot concepts including:
+- Inversion of Control (IoC)
+- Dependency Injection (DI)
+- Application Context Configuration
+- Profiles and External Configuration
+- SpEL (Spring Expression Language)
+- @ConfigurationProperties
+- Spring Boot Autoconfiguration
 
 ---
 
-### Why use @Qualifier?
+## ⚙️ Implementations
 
-When multiple beans of the same type exist, Spring cannot decide which one to inject. @Qualifier helps specify the exact bean.
-
----
-
-### How to avoid loading heavy beans?
-
-- Use @Lazy annotation
-- Use profiles (@Profile)
-- Conditional bean loading
+### 1. Dependency Injection
+- Constructor Injection
+- Setter Injection
+- Primary Bean usage
+- Fixed Bad Spring Context using constructor injection
 
 ---
 
-### Spring Lifecycle Stages
-
-1. Bean Instantiation
-2. Dependency Injection
-3. Initialization (@PostConstruct)
-4. Usage
-5. Destruction (@PreDestroy)
+### 2. Application Configuration
+- Used `application.properties`
+- Externalized configuration
+- Organized properties using prefixes
 
 ---
 
-## Practical Observations
-
-### Multiple Beans Issue
-
-When multiple beans of the same type are present, Spring throws:
-
-NoUniqueBeanDefinitionException
+### 3. Profiles
+Implemented environment-based configurations:
+- `local` → H2 Database
+- `dev` → PostgreSQL
+- `prod` → Environment variables
 
 ---
 
-### Fix using @Qualifier
+### 4. @Value Injection
+Used for simple property values:
 
-We resolved ambiguity by specifying the bean:
-
-## 5.3.1 Application Context Configuration
-
-### Difference between @Configuration, @Component, @Service
-
-@Configuration:
-Used to define configuration classes that declare one or more @Bean methods. These classes are used by Spring to generate and manage beans.
-
-@Component:
-Generic stereotype annotation used to mark a class as a Spring-managed bean.
-
-@Service:
-Specialized version of @Component used to indicate service layer classes. It improves readability and semantic meaning.
+app.name  
+app.version
 
 ---
 
-### How can we customize component scanning?
+### 5. @ConfigurationProperties
+Used for structured configuration:
 
-We can customize component scanning using:
-- @ComponentScan(basePackages = "com.example.demo")
-- Include and exclude filters
-- Specifying packages explicitly
+app.config.*  
+app.time.*
 
----
-
-### What value will a property have if it is defined in two different profiles both active?
-
-The property from the last loaded profile takes precedence and overrides the previous one.
+Mapped to:
+- AppProperties
+- TimeProperties
 
 ---
 
-### Why use Factory Beans instead of regular beans?
+### 6. SpEL (Spring Expression Language)
+Converted string to array:
 
-Factory beans are used when bean creation logic is complex. They provide more control over instantiation and configuration of objects.
+app.topics=java-spring-boot
+
+Output:
+
+[java, spring, boot]
 
 ---
 
-### How to override properties defined in .properties file?
+### 7. ApplicationContext & Environment
+Using `CommandLineRunner`:
+- Printed all beans in the application context
+- Printed active profile
+- Accessed environment properties
 
-Properties can be overridden using:
-- Command line arguments
+---
+
+### 8. Autoconfiguration
+Enabled debugging using:
+
+debug=true
+
+Observed:
+- Positive matches (applied configurations)
+- Negative matches (skipped configurations)
+- Condition-based decision making
+
+---
+
+## 🧠 Key Learnings
+
+- Spring Boot automatically configures beans based on:
+  - Classpath dependencies
+  - Existing beans
+  - Application properties
+
+- Example:
+  - DataSource auto-configured because H2 dependency exists
+  - Tomcat auto-started due to web starter dependency
+
+---
+
+## ❓ Questions
+
+### 1. Difference between @Configuration, @Component, @Service
+- `@Configuration` → defines bean configuration
+- `@Component` → generic Spring bean
+- `@Service` → business logic layer (semantic)
+
+---
+
+### 2. Component Scanning
+Customized using:
+- `@ComponentScan`
+- Base packages
+- Include/exclude filters
+
+---
+
+### 3. Property precedence
+If multiple profiles are active:
+- The last loaded profile overrides previous ones
+
+---
+
+### 4. Factory Beans
+Used when:
+- Object creation is complex
+- Custom instantiation logic is required
+
+---
+
+### 5. Overriding properties
+Can be done using:
+- Profiles
 - Environment variables
-- Different profile-specific property files
-- @TestPropertySource in tests
+- Command-line arguments
 
 ---
 
-### Does @PreDestroy get called for prototype beans?
+### 6. Prototype bean lifecycle
+- `@PreDestroy` is NOT called for prototype beans
 
-No, @PreDestroy is not called for prototype scoped beans because Spring does not manage their full lifecycle.
+---
+
+### 7. Regular Configuration vs Autoconfiguration
+- Regular → manually defined beans
+- Autoconfiguration → automatic based on conditions
+
+---
+
+### 8. Conditional Annotations
+- Work in both regular and autoconfig classes
+- Mainly used in autoconfiguration
+
+---
+
+### 9. Customizing Autoconfiguration
+- Override beans
+- Use properties
+- Exclude configurations:
+
+```java
+@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
