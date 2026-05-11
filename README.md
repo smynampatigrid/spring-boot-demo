@@ -1,165 +1,271 @@
-# Spring Boot - Configuration & Autoconfiguration Assignment
+# 5.4 Introduction to Spring Test {PracticaL}
 
-## 📌 Overview
-This project demonstrates core Spring Boot concepts including:
-- Inversion of Control (IoC)
-- Dependency Injection (DI)
-- Application Context Configuration
-- Profiles and External Configuration
-- SpEL (Spring Expression Language)
-- @ConfigurationProperties
-- Spring Boot Autoconfiguration
+## Overview
+
+This module focuses on Spring Test, an important component of the Spring Framework that enables comprehensive testing of Spring applications. The implementation includes integration testing, application context testing, dirty context handling, property injection, and endpoint testing using Spring Boot Test Framework.
 
 ---
 
-## ⚙️ Implementations
+# Questions and Answers
 
-### 1. Dependency Injection
-- Constructor Injection
-- Setter Injection
-- Primary Bean usage
-- Fixed Bad Spring Context using constructor injection
+## 1. How can we configure the application context when running tests with `@SpringBootTest` annotation?
 
----
+The application context can be configured using the `@SpringBootTest` annotation by specifying configuration classes, properties, or web environment settings.
 
-### 2. Application Configuration
-- Used `application.properties`
-- Externalized configuration
-- Organized properties using prefixes
-
----
-
-### 3. Profiles
-Implemented environment-based configurations:
-- `local` → H2 Database
-- `dev` → PostgreSQL
-- `prod` → Environment variables
-
----
-
-### 4. @Value Injection
-Used for simple property values:
-
-app.name  
-app.version
-
----
-
-### 5. @ConfigurationProperties
-Used for structured configuration:
-
-app.config.*  
-app.time.*
-
-Mapped to:
-- AppProperties
-- TimeProperties
-
----
-
-### 6. SpEL (Spring Expression Language)
-Converted string to array:
-
-app.topics=java-spring-boot
-
-Output:
-
-[java, spring, boot]
-
----
-
-### 7. ApplicationContext & Environment
-Using `CommandLineRunner`:
-- Printed all beans in the application context
-- Printed active profile
-- Accessed environment properties
-
----
-
-### 8. Autoconfiguration
-Enabled debugging using:
-
-debug=true
-
-Observed:
-- Positive matches (applied configurations)
-- Negative matches (skipped configurations)
-- Condition-based decision making
-
----
-
-## 🧠 Key Learnings
-
-- Spring Boot automatically configures beans based on:
-  - Classpath dependencies
-  - Existing beans
-  - Application properties
-
-- Example:
-  - DataSource auto-configured because H2 dependency exists
-  - Tomcat auto-started due to web starter dependency
-
----
-
-## ❓ Questions
-
-### 1. Difference between @Configuration, @Component, @Service
-- `@Configuration` → defines bean configuration
-- `@Component` → generic Spring bean
-- `@Service` → business logic layer (semantic)
-
----
-
-### 2. Component Scanning
-Customized using:
-- `@ComponentScan`
-- Base packages
-- Include/exclude filters
-
----
-
-### 3. Property precedence
-If multiple profiles are active:
-- The last loaded profile overrides previous ones
-
----
-
-### 4. Factory Beans
-Used when:
-- Object creation is complex
-- Custom instantiation logic is required
-
----
-
-### 5. Overriding properties
-Can be done using:
-- Profiles
-- Environment variables
-- Command-line arguments
-
----
-
-### 6. Prototype bean lifecycle
-- `@PreDestroy` is NOT called for prototype beans
-
----
-
-### 7. Regular Configuration vs Autoconfiguration
-- Regular → manually defined beans
-- Autoconfiguration → automatic based on conditions
-
----
-
-### 8. Conditional Annotations
-- Work in both regular and autoconfig classes
-- Mainly used in autoconfiguration
-
----
-
-### 9. Customizing Autoconfiguration
-- Override beans
-- Use properties
-- Exclude configurations:
+### Example
 
 ```java
-@SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+@SpringBootTest(
+    classes = DemoApplication.class,
+    properties = {
+        "server.port=8081"
+    },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT
+)
+```
+
+### Purpose
+
+* Load specific configuration classes
+* Override application properties during tests
+* Configure the web environment
+* Customize the Spring application context
+
+---
+
+## 2. How can you exclude auto configuration from a test?
+
+Auto configuration can be excluded using `@EnableAutoConfiguration`.
+
+### Example
+
+```java
+@SpringBootTest
+@EnableAutoConfiguration(exclude = {
+    DataSourceAutoConfiguration.class
+})
+```
+
+### Purpose
+
+* Avoid unnecessary bean loading
+* Skip database configuration when not needed
+* Improve testing performance
+* Isolate components during testing
+
+---
+
+## 3. How many application contexts can be cached when running tests?
+
+By default, Spring Test caches up to **32 application contexts**.
+
+### Configuration
+
+```properties
+spring.test.context.cache.maxSize=32
+```
+
+### Side Effects of Increasing Cache Size
+
+* Faster repeated test execution
+* More memory consumption
+
+### Side Effects if There Was No Caching
+
+* Application context recreated for every test
+* Very slow test execution
+* Reduced performance in large applications
+
+---
+
+## 4. Can `@MockBean` be used if the bean is not already defined in the application context?
+
+Yes. `@MockBean` can:
+
+* Replace an existing bean
+* Create a new mock bean if none exists
+
+### Example
+
+```java
+@MockBean
+private UserService userService;
+```
+
+### Purpose
+
+* Mock dependencies during testing
+* Isolate application components
+* Simplify unit and integration testing
+
+---
+
+# Exercises
+
+## 1. Dirty Context Demonstration
+
+### CounterService.java
+
+```java
+package com.example.demo;
+
+import org.springframework.stereotype.Service;
+
+@Service
+public class CounterService {
+
+    private int count = 0;
+
+    public void increment() {
+        count++;
+    }
+
+    public int getCount() {
+        return count;
+    }
+}
+```
+
+---
+
+### DirtyContextTest.java
+
+```java
+package com.example.demo;
+
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+@SpringBootTest
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
+public class DirtyContextTest {
+
+    @Autowired
+    private CounterService counterService;
+
+    @Test
+    @Order(1)
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
+    void test1() {
+
+        counterService.increment();
+
+        assertEquals(1, counterService.getCount());
+    }
+
+    @Test
+    @Order(2)
+    void test2() {
+
+        assertEquals(0, counterService.getCount());
+    }
+}
+```
+
+### Explanation
+
+This test demonstrates how shared application context can affect test correctness. Without `@DirtiesContext`, the modified bean state persists between tests, causing failures.
+
+---
+
+# 2. Property Injection Without `.properties` File
+
+## PropertyInjectionTest.java
+
+```java
+package com.example.demo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest(
+        properties = {
+                "app.test.name=SpringTesting",
+                "app.test.version=1.0"
+        }
+)
+public class PropertyInjectionTest {
+
+    @Value("${app.test.name}")
+    private String appName;
+
+    @Value("${app.test.version}")
+    private String version;
+
+    @Test
+    void testProperties() {
+
+        System.out.println("App Name: " + appName);
+        System.out.println("Version: " + version);
+    }
+}
+```
+
+### Explanation
+
+Properties are directly injected into the test using the `properties` attribute of `@SpringBootTest` without using an external `.properties` file.
+
+---
+
+# 3. Integration Testing
+
+## AuthorControllerIntegrationTest.java
+
+```java
+package com.example.demo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class AuthorControllerIntegrationTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    void testAuthorEndpoint() throws Exception {
+
+        mockMvc.perform(get("/authors"))
+                .andExpect(status().isOk());
+    }
+}
+```
+
+### Explanation
+
+This integration test validates the functionality of the application endpoint using:
+
+* Spring Boot application context
+* MockMvc
+* Controller endpoint testing
+
+---
+
+# Conclusion
+
+Through this module, Spring Boot testing concepts such as:
+
+* Integration testing
+* Context caching
+* Dirty context handling
+* Property injection
+* Mocking dependencies
+* Endpoint testing
+
+were successfully implemented and tested using the Spring Test Framework.
