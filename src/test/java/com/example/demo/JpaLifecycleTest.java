@@ -31,7 +31,10 @@ public class JpaLifecycleTest {
         courseRepository.deleteAll();
     }
 
-    // repository.save()
+    // ------------------------------------------------
+    // Parent WITHOUT ID
+    // ------------------------------------------------
+
     @Test
     void saveParentWithoutIdUsingRepository() {
 
@@ -45,7 +48,6 @@ public class JpaLifecycleTest {
         System.out.println(savedCourse);
     }
 
-    // entityManager.persist()
     @Test
     @Transactional
     void saveParentWithoutIdUsingPersist() {
@@ -60,7 +62,6 @@ public class JpaLifecycleTest {
         System.out.println(course);
     }
 
-    // entityManager.merge()
     @Test
     @Transactional
     void saveParentWithoutIdUsingMerge() {
@@ -74,18 +75,24 @@ public class JpaLifecycleTest {
 
         System.out.println(mergedCourse);
     }
-    // repository.save() with initialized ID
+
+    // ------------------------------------------------
+    // Parent WITH initialized ID
+    // ------------------------------------------------
+
     @Test
     void saveParentWithInitializedIdUsingRepository() {
 
         Course course = new Course();
         course.setName("Repository ID Test");
 
-        // manually setting ID
         try {
-            java.lang.reflect.Field field = Course.class.getDeclaredField("id");
+            java.lang.reflect.Field field =
+                    Course.class.getDeclaredField("id");
+
             field.setAccessible(true);
             field.set(course, 100L);
+
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -97,7 +104,6 @@ public class JpaLifecycleTest {
         System.out.println(savedCourse);
     }
 
-    // persist() with initialized ID
     @Test
     @Transactional
     void saveParentWithInitializedIdUsingPersist() {
@@ -106,19 +112,22 @@ public class JpaLifecycleTest {
         course.setName("Persist ID Test");
 
         try {
-            java.lang.reflect.Field field = Course.class.getDeclaredField("id");
+            java.lang.reflect.Field field =
+                    Course.class.getDeclaredField("id");
+
             field.setAccessible(true);
             field.set(course, 200L);
+
         } catch (Exception e) {
             fail(e.getMessage());
         }
 
-        entityManager.persist(course);
-
-        System.out.println(course);
+        assertThrows(Exception.class, () -> {
+            entityManager.persist(course);
+            entityManager.flush();
+        });
     }
 
-    // merge() with initialized ID
     @Test
     @Transactional
     void saveParentWithInitializedIdUsingMerge() {
@@ -127,9 +136,12 @@ public class JpaLifecycleTest {
         course.setName("Merge ID Test");
 
         try {
-            java.lang.reflect.Field field = Course.class.getDeclaredField("id");
+            java.lang.reflect.Field field =
+                    Course.class.getDeclaredField("id");
+
             field.setAccessible(true);
             field.set(course, 300L);
+
         } catch (Exception e) {
             fail(e.getMessage());
         }
@@ -139,5 +151,139 @@ public class JpaLifecycleTest {
         assertNotNull(mergedCourse);
 
         System.out.println(mergedCourse);
+    }
+
+    // ------------------------------------------------
+    // Duplicate Parent ID
+    // ------------------------------------------------
+
+    @Test
+    @Transactional
+    void saveDuplicateParentIdUsingMerge() {
+
+        Course original = new Course();
+        original.setName("Original Course");
+
+        entityManager.persist(original);
+        entityManager.flush();
+
+        Course duplicate = new Course();
+        duplicate.setName("Duplicate Course");
+
+        try {
+            java.lang.reflect.Field field =
+                    Course.class.getDeclaredField("id");
+
+            field.setAccessible(true);
+            field.set(duplicate, original.getId());
+
+        } catch (Exception e) {
+            fail(e.getMessage());
+        }
+
+        Course merged = entityManager.merge(duplicate);
+
+        assertNotNull(merged);
+
+        System.out.println(merged);
+    }
+
+    // ------------------------------------------------
+    // Parent with NEW Children
+    // ------------------------------------------------
+
+    @Test
+    void saveParentWithNewChildrenUsingRepository() {
+
+        Course course = new Course();
+        course.setName("Spring");
+
+        Student s1 =
+                new Student("Sreeja", "sreeja@test.com", course);
+
+        Student s2 =
+                new Student("Alex", "alex@test.com", course);
+
+        course.addStudent(s1);
+        course.addStudent(s2);
+
+        Course saved = courseRepository.save(course);
+
+        assertEquals(2, saved.getStudents().size());
+
+        System.out.println(saved);
+    }
+
+    // ------------------------------------------------
+    // Child WITHOUT Parent
+    // ------------------------------------------------
+
+    @Test
+    void saveChildWithoutParentUsingRepository() {
+
+        Student student =
+                new Student("John", "john@test.com", null);
+
+        Student saved = studentRepository.save(student);
+
+        assertNotNull(saved.getId());
+
+        System.out.println(saved);
+    }
+
+    // ------------------------------------------------
+    // Child WITH transient Parent
+    // ------------------------------------------------
+
+    @Test
+    void saveChildWithTransientParent() {
+
+        Course course = new Course();
+        course.setName("Transient Parent");
+
+        // Save parent first
+        Course savedCourse = courseRepository.save(course);
+
+        Student student = new Student();
+        student.setName("Sreeja");
+        student.setEmail("sreeja@test.com");
+        student.setCourse(savedCourse);
+
+        Student savedStudent = studentRepository.save(student);
+
+        assertNotNull(savedStudent.getId());
+
+        System.out.println(savedStudent);
+    }
+
+    // ------------------------------------------------
+    // Dirty Checking
+    // ------------------------------------------------
+
+    @Test
+    @Transactional
+    void dirtyCheckingTest() {
+
+        Course course = new Course();
+        course.setName("Old Name");
+
+        entityManager.persist(course);
+        entityManager.flush();
+
+        Course fetched =
+                courseRepository.findById(course.getId())
+                        .orElseThrow();
+
+        fetched.setName("Updated Name");
+
+        entityManager.flush();
+
+        Course updated =
+                courseRepository.findById(course.getId())
+                        .orElseThrow();
+
+        assertEquals("Updated Name", updated.getName());
+
+        System.out.println(updated);
     }
 }
