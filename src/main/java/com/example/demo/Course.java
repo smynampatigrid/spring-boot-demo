@@ -1,6 +1,8 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,10 +18,14 @@ public class Course {
     private String name;
 
     // One course can have many students
-    @OneToMany(mappedBy = "course",
+    @OneToMany(
+            mappedBy = "course",
             cascade = CascadeType.ALL,
-            fetch = FetchType.LAZY)
-    private List<Student> students = new ArrayList<>();
+            fetch = FetchType.LAZY
+    )
+    @JsonManagedReference
+    private List<Student> students =
+            new ArrayList<>();
 
     // Default Constructor
     public Course() {
@@ -32,6 +38,7 @@ public class Course {
 
     // Helper Method
     public void addStudent(Student student) {
+
         students.add(student);
         student.setCourse(this);
     }
@@ -54,7 +61,9 @@ public class Course {
         return students;
     }
 
-    public void setStudents(List<Student> students) {
+    public void setStudents(
+            List<Student> students) {
+
         this.students = students;
     }
 

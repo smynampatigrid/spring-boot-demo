@@ -1,5 +1,6 @@
 package com.example.demo;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,6 +20,7 @@ public class Student {
     // Many students can belong to one course
     @ManyToOne
     @JoinColumn(name = "course_id")
+    @JsonBackReference
     private Course course;
 
     // Default Constructor
@@ -26,7 +28,10 @@ public class Student {
     }
 
     // Parameterized Constructor
-    public Student(String name, String email, Course course) {
+    public Student(String name,
+                   String email,
+                   Course course) {
+
         this.name = name;
         this.email = email;
         this.course = course;
@@ -68,7 +73,10 @@ public class Student {
                 "id=" + id +
                 ", name='" + name + '\'' +
                 ", email='" + email + '\'' +
-                ", course=" + (course != null ? course.getName() : "No Course") +
+                ", course=" +
+                (course != null
+                        ? course.getName()
+                        : "No Course") +
                 '}';
     }
 }

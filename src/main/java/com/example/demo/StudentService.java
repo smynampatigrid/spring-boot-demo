@@ -11,30 +11,38 @@ public class StudentService {
     @Autowired
     private StudentRepository studentRepository;
 
+    // CREATE
     public Student saveStudent(Student student) {
 
         return studentRepository.save(student);
     }
 
+    // READ ALL
     public List<Student> getAllStudents() {
 
         return studentRepository.findAll();
     }
 
+    // READ BY ID
     public Student getStudentById(Long id) {
 
-        return studentRepository.findById(id).orElse(null);
+        return studentRepository.findById(id)
+                .orElse(null);
     }
 
-    public void deleteStudent(Long id) {
+    // READ BY EMAIL
+    public Student getStudentByEmail(String email) {
 
-        studentRepository.deleteById(id);
+        return studentRepository.findByEmail(email);
     }
 
-    public Student updateStudent(Long id, Student updatedStudent) {
+    // UPDATE
+    public Student updateStudent(Long id,
+                                 Student updatedStudent) {
 
         Student existingStudent =
-                studentRepository.findById(id).orElse(null);
+                studentRepository.findById(id)
+                        .orElse(null);
 
         if (existingStudent != null) {
 
@@ -46,5 +54,11 @@ public class StudentService {
         }
 
         return null;
+    }
+
+    // DELETE
+    public void deleteStudent(Long id) {
+
+        studentRepository.deleteById(id);
     }
 }
