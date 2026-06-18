@@ -2,6 +2,9 @@ package com.example.demo;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.Size;
 
 @Entity
 @Table(name = "students")
@@ -12,9 +15,17 @@ public class Student {
     private Long id;
 
     @Column(nullable = false)
+    @NotBlank(message = "Name cannot be blank")
+    @Size(
+            min = 2,
+            max = 50,
+            message = "Name must be between 2 and 50 characters"
+    )
     private String name;
 
     @Column(unique = true, nullable = false)
+    @NotBlank(message = "Email cannot be blank")
+    @Email(message = "Invalid email format")
     private String email;
 
     // Many students can belong to one course

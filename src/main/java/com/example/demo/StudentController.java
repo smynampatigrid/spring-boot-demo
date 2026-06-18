@@ -1,6 +1,8 @@
 package com.example.demo;
 
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,7 +16,8 @@ public class StudentController {
 
     // CREATE
     @PostMapping
-    public Student createStudent(@RequestBody Student student) {
+    public Student createStudent(
+            @Valid @RequestBody Student student) {
 
         return studentService.saveStudent(student);
     }
@@ -26,9 +29,23 @@ public class StudentController {
         return studentService.getAllStudents();
     }
 
+    // SEARCH + PAGINATION
+    @GetMapping("/search")
+    public Page<Student> searchStudents(
+            @RequestParam String name,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size) {
+
+        return studentService.searchStudents(
+                name,
+                page,
+                size);
+    }
+
     // READ BY ID
     @GetMapping("/{id}")
-    public Student getStudentById(@PathVariable Long id) {
+    public Student getStudentById(
+            @PathVariable Long id) {
 
         return studentService.getStudentById(id);
     }
@@ -45,17 +62,21 @@ public class StudentController {
     @PutMapping("/{id}")
     public Student updateStudent(
             @PathVariable Long id,
-            @RequestBody Student student) {
+            @Valid @RequestBody Student student) {
 
-        return studentService.updateStudent(id, student);
+        return studentService.updateStudent(
+                id,
+                student);
     }
 
     // DELETE
     @DeleteMapping("/{id}")
-    public String deleteStudent(@PathVariable Long id) {
+    public String deleteStudent(
+            @PathVariable Long id) {
 
         studentService.deleteStudent(id);
 
         return "Student deleted successfully!";
     }
+
 }
